@@ -79,7 +79,7 @@ export function UploadDocuments() {
         ? 'processar-cupom'
         : 'processar-boleto';
 
-    const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/storage-upload`;
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${endpoint}`;
       console.log('Chamando Edge Function:', apiUrl);
 
       const { data: { session } } = await supabase.auth.getSession();
@@ -88,14 +88,7 @@ export function UploadDocuments() {
         throw new Error('Sessão não encontrada. Faça login novamente.');
       }
 
-      88
-        89
-          (apiUrl, {
-                    const formData = new FormData();
-        formData.append('file', file);
-        formData.append('type', documentType);
-
-
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
