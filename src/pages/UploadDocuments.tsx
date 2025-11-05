@@ -88,7 +88,14 @@ export function UploadDocuments() {
         throw new Error('Sessão não encontrada. Faça login novamente.');
       }
 
-      const response = await fetch(apiUrl, {
+      88
+        89
+          (apiUrl, {
+                    const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', documentType);
+
+
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
