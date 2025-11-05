@@ -79,8 +79,7 @@ export function UploadDocuments() {
         ? 'processar-cupom'
         : 'processar-boleto';
 
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${endpoint}`;
-
+    const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/storage-upload`;
       console.log('Chamando Edge Function:', apiUrl);
 
       const { data: { session } } = await supabase.auth.getSession();
