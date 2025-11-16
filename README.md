@@ -1,164 +1,193 @@
-# 💰 Sistema de Controle Financeiro
+# Restaurant Purchase Tracker - Infrastructure
 
-Sistema completo de gestão financeira com IA para processamento automático de cupons fiscais e boletos.
+Este projeto contém a infraestrutura como código (IaC) para o aplicativo Restaurant Purchase Tracker usando Terraform e Google Cloud Platform.
 
-## ✨ Funcionalidades
+## Arquivos do Projeto
 
-- 📊 **Dashboard** - Visão geral de gastos e métricas
-- 📤 **Upload de Documentos** - Processamento automático com IA (Claude 3.5 Sonnet)
-- 💬 **Chat BI** - Consultas em linguagem natural sobre seus gastos
-- 📈 **Relatórios** - Análises e gráficos detalhados
-- 🔐 **Autenticação** - Login seguro com Supabase Auth
+- **Dockerfile**: Configuração para containerização da aplicação Java
+- **main.tf**: Configuração principal do Terraform com todos os recursos GCP
+- **variables.tf**: Definição das variáveis do Terraform
+- **terraform.tfvars.example**: Exemplo de arquivo de configuração (copie para terraform.tfvars)
 
-## 🛠️ Tecnologias
+## Recursos Provisionados
 
-- **Frontend:** React + TypeScript + Vite + Tailwind CSS
-- **Backend:** Supabase (PostgreSQL + Edge Functions + Storage)
-- **IA:** Claude 3.5 Sonnet (Anthropic)
-- **Deploy:** Vercel
+Este Terraform provisiona:
 
-## 🚀 Deploy Rápido
+### Infraestrutura de Rede
+- VPC Network privada
+- VPC Access Connector para Cloud Run
+- Peering de rede privada para Cloud SQL
 
-### 1. Configurar Supabase
+### Banco de Dados
+- Cloud SQL PostgreSQL 15
+- Banco de dados `financeiro_db`
+- Usuário `financeiro_user` com senha gerada automaticamente
+- Configuração de rede privada (sem IP público)
 
-1. Crie um projeto em: https://supabase.com
-2. Execute o script SQL em `supabase/migrations/` para criar as tabelas
-3. Deploy das Edge Functions:
+### Segurança
+- Secret Manager para armazenar senha do banco
+- Service Account dedicada para Cloud Run
+- Permissões IAM mínimas necessárias
+
+### Aplicação
+- Cloud Run service para hospedar a aplicação
+- Configuração de variáveis de ambiente
+- Auto-scaling (0-5 instâncias)
+
+## Instruções de Uso
+
+### 1. Pré-requisitos
+
+- [Terraform](https://www.terraform.io/downloads.html) instalado
+- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) instalado
+- Projeto GCP criado
+- Autenticação configurada:
+  ```bash
+  gcloud auth login
+  gcloud config set project YOUR_PROJECT_ID
+  gcloud auth application-default login
+  ```
+
+### 2. Configuração
+
+1. **Clone ou baixe os arquivos** para um diretório local
+
+2. **Configure as variáveis**:
    ```bash
-   npx supabase functions deploy processar-cupom
-   npx supabase functions deploy processar-boleto
-   npx supabase functions deploy chat-bi
+   cp terraform.tfvars.example terraform.tfvars
    ```
-4. Configure a variável `ANTHROPIC_API_KEY` nas Edge Functions
+   
+   Edite `terraform.tfvars` com seus valores:
+   ```hcl
+   project_id = "seu-project-id-gcp"
+   region     = "southamerica-east1"  # ou sua região preferida
+   ```
 
-### 2. Deploy na Vercel
+3. **Inicialize o Terraform**:
+   ```bash
+   terraform init
+   ```
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/seu-usuario/seu-repo)
+### 3. Deploy da Infraestrutura
 
-**Variáveis de ambiente necessárias:**
-- `VITE_SUPABASE_URL` - URL do seu projeto Supabase
-- `VITE_SUPABASE_ANON_KEY` - Chave anon pública do Supabase
+1. **Planeje a execução**:
+   ```bash
+   terraform plan
+   ```
+   
+2. **Aplique as mudanças**:
+   ```bash
+   terraform apply
+   ```
+   
+   Digite `yes` quando solicitado.
 
-### 3. Pronto! 🎉
+### 4. Outputs Importantes
 
-Acesse sua aplicação e comece a usar.
+Após o deploy, o Terraform exibirá:
+- **cloud_run_url**: URL do serviço Cloud Run
+- **db_user**: Nome do usuário do banco
+- **db_name**: Nome do banco de dados
+- **db_password_secret_id**: ID do secret com a senha
 
-## 📚 Documentação Completa
+### 5. Próximos Passos
 
-- [📖 Instruções de Uso](./INSTRUCOES.md)
-- [🔧 Configuração da API](./CONFIGURACAO_API.md)
-- [🚀 Guia de Deploy na Vercel](./GUIA_DEPLOY_VERCEL.md)
+Após a infraestrutura estar pronta:
 
-## 💻 Desenvolvimento Local
+1. **Build da imagem Docker**:
+   ```bash
+   # Configure o Docker para usar o GCR
+   gcloud auth configure-docker
+   
+   # Build e push da imagem
+   docker build -t gcr.io/YOUR_PROJECT_ID/finance-app:latest .
+   docker push gcr.io/YOUR_PROJECT_ID/finance-app:latest
+   ```
 
+2. **Deploy da aplicação**:
+   ```bash
+   # Atualizar o Cloud Run com a nova imagem
+   gcloud run deploy controle-financeiro-api \
+     --image gcr.io/YOUR_PROJECT_ID/finance-app:latest \
+     --region YOUR_REGION
+   ```
+
+## Estrutura de Custos
+
+- **Cloud SQL**: db-f1-micro (tier econômico)
+- **Cloud Run**: Pay-per-use, escala para zero
+- **VPC**: Sem custos adicionais
+- **Secret Manager**: Primeiros 6 secrets gratuitos
+
+## Segurança
+
+- ✅ Cloud SQL sem IP público
+- ✅ Comunicação via rede privada
+- ✅ Senhas geradas automaticamente
+- ✅ Secrets gerenciados pelo Secret Manager
+- ✅ Permissões IAM mínimas
+
+## CI/CD Pipeline
+
+O projeto inclui configuração completa de CI/CD com Cloud Build:
+
+### Arquivo cloudbuild.yaml
+
+O pipeline automatiza:
+1. **Build Maven**: Compilação e empacotamento da aplicação Java
+2. **Build Docker**: Criação da imagem Docker usando o Dockerfile multi-estágio
+3. **Deploy Cloud Run**: Deploy automático da nova versão
+
+### Configuração do Pipeline
+
+1. **Habilitar APIs necessárias**:
+   ```bash
+   gcloud services enable cloudbuild.googleapis.com artifactregistry.googleapis.com
+   ```
+
+2. **Criar repositório Artifact Registry** (opcional):
+   ```bash
+   gcloud artifacts repositories create finance-app \
+     --repository-format=docker \
+     --location=southamerica-east1 \
+     --description="Docker repository for finance-app"
+   ```
+
+3. **Configurar Cloud Build Trigger**:
+   - Acesse Cloud Build > Triggers no console GCP
+   - Conecte seu repositório GitHub
+   - Configure trigger para branch `main`
+   - Defina `_REGION` nas variáveis de substituição
+   - Aponte para `/cloudbuild.yaml`
+
+### Deploy Automático
+
+Após configurar o trigger:
+- ✅ Push para `main` → Build automático
+- ✅ Testes e compilação Maven
+- ✅ Build da imagem Docker
+- ✅ Deploy no Cloud Run
+- ✅ Versionamento com SHA do commit
+
+## Limpeza
+
+Para remover todos os recursos:
 ```bash
-# Instalar dependências
-npm install
-
-# Copiar .env.example para .env
-cp .env.example .env
-
-# Editar .env com suas credenciais
-nano .env
-
-# Iniciar servidor de desenvolvimento
-npm run dev
-
-# Build para produção
-npm run build
-
-# Visualizar build
-npm run preview
+terraform destroy
 ```
 
-## 🔑 Variáveis de Ambiente
+⚠️ **Atenção**: Isso removerá permanentemente todos os dados!
 
-Crie um arquivo `.env` na raiz do projeto:
+## Troubleshooting
 
-```bash
-# Supabase
-VITE_SUPABASE_URL=https://seu-projeto.supabase.co
-VITE_SUPABASE_ANON_KEY=sua-chave-anon-key
-```
+### Erro de APIs não habilitadas
+Se você receber erros sobre APIs não habilitadas, aguarde alguns minutos após o `terraform apply` e execute novamente.
 
-**Nota:** A chave `ANTHROPIC_API_KEY` deve ser configurada nas Edge Functions do Supabase, NÃO no `.env` do frontend.
+### Erro de permissões
+Verifique se sua conta tem as permissões necessárias:
+- Editor ou Owner no projeto
+- Service Account Admin
+- Cloud SQL Admin
 
-## 📝 Scripts Disponíveis
-
-```bash
-npm run dev        # Inicia servidor de desenvolvimento
-npm run build      # Cria build de produção
-npm run preview    # Visualiza build de produção
-npm run lint       # Verifica código com ESLint
-npm run typecheck  # Verifica tipagem TypeScript
-```
-
-## 🐛 Resolução de Problemas
-
-### "Variáveis de ambiente do Supabase não configuradas"
-- Verifique se criou o arquivo `.env`
-- Confirme se copiou as credenciais corretas do Supabase
-
-### Upload de imagens não funciona
-- Verifique se configurou `ANTHROPIC_API_KEY` nas Edge Functions do Supabase
-- Veja os logs das Edge Functions no painel do Supabase
-
-### Erro 404 ao navegar
-- Verifique se o arquivo `vercel.json` está presente
-- No desenvolvimento local, use `npm run dev` (não `npm run preview`)
-
-## 📄 Estrutura do Projeto
-
-```
-.
-├── src/
-│   ├── components/      # Componentes React
-│   ├── contexts/        # Contextos (Auth, etc)
-│   ├── lib/            # Configurações (Supabase)
-│   ├── pages/          # Páginas da aplicação
-│   └── App.tsx         # Componente principal
-├── supabase/
-│   ├── functions/      # Edge Functions (Deno)
-│   └── migrations/     # Scripts SQL
-├── dist/              # Build de produção
-├── .env.example       # Exemplo de variáveis de ambiente
-├── vercel.json        # Configuração da Vercel
-└── package.json       # Dependências
-```
-
-## 🔒 Segurança
-
-- ✅ Row Level Security (RLS) habilitado em todas as tabelas
-- ✅ Autenticação obrigatória para todas as operações
-- ✅ Chaves secretas protegidas nas Edge Functions
-- ✅ Upload de arquivos validado e limitado
-
-## 📊 Banco de Dados
-
-O sistema utiliza as seguintes tabelas:
-
-- `suppliers` - Fornecedores
-- `products` - Produtos normalizados
-- `purchases` - Compras realizadas
-- `purchase_items` - Itens de cada compra
-- `bills` - Boletos a pagar
-- `receipts` - Arquivos de cupons/boletos
-
-## 🤝 Contribuindo
-
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests.
-
-## 📄 Licença
-
-MIT
-
-## 🆘 Suporte
-
-Se tiver problemas:
-1. Leia a [documentação completa](./INSTRUCOES.md)
-2. Verifique o [guia de deploy](./GUIA_DEPLOY_VERCEL.md)
-3. Abra uma issue no GitHub
-
----
-
-**Desenvolvido com ❤️ usando React, Supabase e Claude AI**
+### Problemas de conectividade
+Verifique se o VPC Access Connector foi criado corretamente e se o Cloud Run está configurado para usá-lo.
