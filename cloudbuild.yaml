@@ -1,0 +1,57 @@
+steps:
+  # Step 1: Compila e empacota a aplicação Java com Maven
+  # Este passo usa o builder Maven para executar o comando 'mvn clean install'.
+  # O '-DskipTests' é usado para acelerar o build, assumindo que os testes
+  # podem ser executados em um estágio separado ou localmente.
+  - name: 'maven'
+    entrypoint: 'mvn'
+    args: ['clean', 'install', '-DskipTests']
+
+  # Step 2: Constrói a imagem Docker
+  # Utiliza o Dockerfile multi-estágio que você criou para construir a imagem Docker.
+  # A imagem é taggeada com o SHA curto do commit (para rastreabilidade) e também com 'latest'
+  # para facilitar o deploy da versão mais recente.
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/finance-app:$SHORT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/finance-app:latest'
+      - '.' # Indica que o Dockerfile está no diretório atual
+
+  # Step 3: Faz o deploy da nova imagem no Cloud Run
+  # O Cloud Build automaticamente faz o push das imagens taggeadas (definidas no campo 'images' abaixo)
+  # para o Google Artifact Registry (ou Container Registry).
+  # Este passo implanta a imagem recém-construída no serviço Cloud Run.
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'controle-financeiro-api' # Nome do serviço Cloud Run criado pelo Terraform
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/finance-app:$SHORT_SHA' # Usa a imagem taggeada com o SHA do commit
+      - '--region'
+      - '${_REGION}' # Região onde o Cloud Run está implantado (definida nas substituições)
+      - '--platform'
+      - 'managed'
+      - '--service-account'
+      - 'controle-financeiro-run-sa@$PROJECT_ID.iam.gserviceaccount.com' # Service Account criado pelo Terraform
+      # Se sua aplicação não precisa ser acessível publicamente sem autenticação,
+      # REMOVA ou COMENTE a linha abaixo. Para uma API de controle financeiro,
+      # é provável que você queira que ela seja autenticada.
+      # - '--allow-unauthenticated'
+    waitFor: ['-'] # Garante que este passo só comece após todos os passos anteriores terem sido concluídos com sucesso
+
+# Define as imagens Docker que serão automaticamente enviadas para o Google Artifact Registry
+# após o sucesso do passo de build.
+images:
+  - 'gcr.io/$PROJECT_ID/finance-app:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/finance-app:latest'
+
+# Substituições padrão.
+# A variável '_REGION' é usada para especificar a região do Cloud Run.
+# É crucial que esta região corresponda à região que você definiu no seu arquivo Terraform.
+# Você pode sobrescrever '_REGION' ao configurar o trigger do Cloud Build ou ao iniciar um build manualmente.
+substitutions:
+  _REGION: us-central1 # <-- ATENÇÃO: Altere para a região que você usou no Terraform (ex: southamerica-east1)
