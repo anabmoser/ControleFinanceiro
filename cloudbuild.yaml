@@ -16,7 +16,7 @@ steps:
       - 'managed'
       - '--service-account'
       - 'controle-financeiro-run-sa@$PROJECT_ID.iam.gserviceaccount.com'
-            - '--allow-unauthenticated'# Service Account criado pelo Terraform
+            - '--allow-unauthenticated'# Service Account criado pelo Terraform 
 
   # Se sua aplicação não precisa ser acessível publicamente sem autenticação,
   # REMOVA ou COMENTE a linha abaixo. Para uma API de controle financeiro,
