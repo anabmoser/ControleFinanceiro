@@ -42,8 +42,6 @@ logging: NONE
       # Se sua aplicação não precisa ser acessível publicamente sem autenticação,
       # REMOVA ou COMENTE a linha abaixo. Para uma API de controle financeiro,
       # é provável que você queira que ela seja autenticada.
-      # - '--allow-unauthenticated'
-    waitFor: ['-'] # Garante que este passo só comece após todos os passos anteriores terem sido concluídos com sucesso
 
 # Define as imagens Docker que serão automaticamente enviadas para o Google Artifact Registry
 # após o sucesso do passo de build.
