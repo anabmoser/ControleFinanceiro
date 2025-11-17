@@ -15,7 +15,8 @@ steps:
       - '--platform'
       - 'managed'
       - '--service-account'
-      - 'controle-financeiro-run-sa@$PROJECT_ID.iam.gserviceaccount.com'  # Service Account criado pelo Terraform
+      - 'controle-financeiro-run-sa@$PROJECT_ID.iam.gserviceaccount.com'
+            - '--allow-unauthenticated'# Service Account criado pelo Terraform
 
   # Se sua aplicação não precisa ser acessível publicamente sem autenticação,
   # REMOVA ou COMENTE a linha abaixo. Para uma API de controle financeiro,
@@ -32,7 +33,7 @@ images:
 # É crucial que esta região corresponda à região que você definiu no seu arquivo Terraform.
 # Você pode sobrescrever '_REGION' ao configurar o trigger do Cloud Build ou ao iniciar um build manualmente.
 substitutions:
-  _REGION: us-southamerica-east1  # <-- ATENÇÃO: Altere para a região que você usou no Terraform (ex: southamerica-east1)
+  southamerica-east1rica-east1  # <-- ATENÇÃO: Altere para a região que você usou no Terraform (ex: southamerica-east1)
 
 options:
   logging: CLOUD_LOGGING_ONLY
