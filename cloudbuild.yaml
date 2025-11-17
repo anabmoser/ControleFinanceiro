@@ -7,22 +7,22 @@ steps:
     args:
       - 'run'
       - 'deploy'
-      - 'controle-financeiro-api' # Nome do serviço Cloud Run criado pelo Terraform
+      - 'controle-financeiro-api'  # Nome do serviço Cloud Run criado pelo Terraform
       - '--image'
-      - 'gcr.io/$PROJECT_ID/finance-app:$SHORT_SHA' # Usa a imagem taggeada com o SHA do commit
+      - 'gcr.io/$PROJECT_ID/finance-app:$SHORT_SHA'  # Usa a imagem taggeada com o SHA do commit
       - '--region'
-      - '${_REGION}' # Região onde o Cloud Run está implantado (definida nas substituições)
+      - '${_REGION}'  # Região onde o Cloud Run está implantado (definida nas substituições)
       - '--platform'
       - 'managed'
       - '--service-account'
-      - 'controle-financeiro-run-sa@$PROJECT_ID.iam.gserviceaccount.com' # Service Account criado pelo Terraform
+      - 'controle-financeiro-run-sa@$PROJECT_ID.iam.gserviceaccount.com'  # Service Account criado pelo Terraform
 
-# Se sua aplicação não precisa ser acessível publicamente sem autenticação,
-# REMOVA ou COMENTE a linha abaixo. Para uma API de controle financeiro,
-# é provável que você queira que ela seja autenticada.
+  # Se sua aplicação não precisa ser acessível publicamente sem autenticação,
+  # REMOVA ou COMENTE a linha abaixo. Para uma API de controle financeiro,
+  # é provável que você queira que ela seja autenticada.
 
-# Define as imagens Docker que serão automaticamente enviadas para o Google Artifact Registry
-# após o sucesso do passo de build.
+  # Define as imagens Docker que serão automaticamente enviadas para o Google Artifact Registry
+  # após o sucesso do passo de build.
 images:
   - 'gcr.io/$PROJECT_ID/finance-app:$SHORT_SHA'
   - 'gcr.io/$PROJECT_ID/finance-app:latest'
@@ -32,10 +32,8 @@ images:
 # É crucial que esta região corresponda à região que você definiu no seu arquivo Terraform.
 # Você pode sobrescrever '_REGION' ao configurar o trigger do Cloud Build ou ao iniciar um build manualmente.
 substitutions:
-  _REGION: us-southamerica-east1 # <-- ATENÇÃO: Altere para a região que você usou no Terraform (ex: southamerica-east1)
+  _REGION: us-southamerica-east1  # <-- ATENÇÃO: Altere para a região que você usou no Terraform (ex: southamerica-east1)
 
 options:
   logging: CLOUD_LOGGING_ONLY
-  defaultLogsBucketBehavior: REGIONREGIONAL_USER_OWNED_BUCKEFix region configuration and corrupted text in cloudbuild.yamlT
-  
-  .35
+  defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
