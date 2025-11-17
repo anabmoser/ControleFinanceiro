@@ -32,8 +32,10 @@ images:
 # É crucial que esta região corresponda à região que você definiu no seu arquivo Terraform.
 # Você pode sobrescrever '_REGION' ao configurar o trigger do Cloud Build ou ao iniciar um build manualmente.
 substitutions:
-  _REGION: us-central1 # <-- ATENÇÃO: Altere para a região que você usou no Terraform (ex: southamerica-east1)
+  _REGION: us-southamerica-east1 # <-- ATENÇÃO: Altere para a região que você usou no Terraform (ex: southamerica-east1)
 
 options:
   logging: CLOUD_LOGGING_ONLY
-  defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
+  defaultLogsBucketBehavior: REGIONREGIONAL_USER_OWNED_BUCKEFix region configuration and corrupted text in cloudbuild.yamlT
+  
+  .35
