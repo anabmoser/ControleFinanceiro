@@ -15,7 +15,7 @@ steps:
       - '--platform'
       - 'managed'
       - '--service-account'
-      - 'controle-financeiro-run-sa@$PROJECT_ID.iam.gserviceaccount.com'
+      - ontrole-financeiro-run-sa@$PROJECT_ID.iam.gserviceaccount.com'
             - '--allow-unauthenticated'# Service Account criado pelo Terraform 
 
   # Se sua aplicação não precisa ser acessível publicamente sem autenticação,
