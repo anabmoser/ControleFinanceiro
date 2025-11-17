@@ -27,7 +27,7 @@ steps:
   - name: 'gcr.io/cloud-builders/gcloud'
     args:
       - 'run'
-      - 'deploy'
+      - 'deploy'Remove invalid logging field from cloudbuild.yaml
       - 'controle-financeiro-api' # Nome do serviço Cloud Run criado pelo Terraform
       - '--image'
       - 'gcr.io/$PROJECT_ID/finance-app:$SHORT_SHA' # Usa a imagem taggeada com o SHA do commit
@@ -37,7 +37,6 @@ steps:
       - 'managed'
       - '--service-account'
       - 'controle-financeiro-run-sa@$PROJECT_ID.iam.gserviceaccount.com' # Service Account criado pelo Terraform:
-logging: NONE
       
       # Se sua aplicação não precisa ser acessível publicamente sem autenticação,
       # REMOVA ou COMENTE a linha abaixo. Para uma API de controle financeiro,
