@@ -52,4 +52,7 @@ images:
 # É crucial que esta região corresponda à região que você definiu no seu arquivo Terraform.
 # Você pode sobrescrever '_REGION' ao configurar o trigger do Cloud Build ou ao iniciar um build manualmente.
 substitutions:
-  _REGION: us-central1 # <-- ATENÇÃO: Altere para a região que você usou no Terraform (ex: southamerica-east1)
+  _REGION: us-
+  options:
+  logging: CLOUD_LOGGING_ONLY
+  default_logs_bucket_behavior: REGIONAL_USER_OWNED_BUCKETcentral1 # <-- ATENÇÃO: Altere para a região que você usou no Terraform (ex: southamerica-east1)
