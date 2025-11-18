@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { TrendingUp, Package, Calendar, ShoppingCart } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../contexts/AuthContext';
 
 interface KPIData {
   gastoSemana: number;
@@ -10,17 +9,17 @@ interface KPIData {
 
 interface Bill {
   id: string;
-  due_date: string;
-  issuer_name: string;
-  amount: number;
+  vencimento: string;
+  emissor: string;
+  valor: number;
   status: string;
 }
 
 interface Purchase {
   id: string;
-  date: string;
-  supplier_name_raw: string;
-  invoice_number: string | null;
+  data: string;
+  fornecedor: string;
+  numero_nota: string | null;
   status: string;
 }
 
@@ -31,7 +30,6 @@ interface WeeklyData {
 }
 
 export function Dashboard() {
-  const { user } = useAuth();
   const [kpis, setKpis] = useState<KPIData>({ gastoSemana: 0, totalCompras: 0 });
   const [bills, setBills] = useState<Bill[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
@@ -39,30 +37,23 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      loadDashboardData();
-    }
-  }, [user]);
+    loadDashboardData();
+  }, []);
 
   const loadDashboardData = async () => {
     try {
       const hoje = new Date();
       const inicioSemana = new Date(hoje);
-      inicioSemana.setDate(hoje.getDate() - hoje.getDay());
-      const fimSemana = new Date(inicioSemana);
-      fimSemana.setDate(inicioSemana.getDate() + 6);
+      inicioSemana.setDate(hoje.getDate() - 7);
 
-      const { data: purchaseItems } = await supabase
-        .from('purchase_items')
-        .select('total_cost, weight_kg, product_name_normalized, purchase_id')
-        .eq('user_id', user?.id)
-        .gte('created_at', inicioSemana.toISOString())
-        .lte('created_at', fimSemana.toISOString());
+      const { data: purchasesData } = await supabase
+        .from('purchases')
+        .select('*')
+        .eq('status', 'confirmed')
+        .gte('data', inicioSemana.toISOString().split('T')[0]);
 
-      const gastoSemana = purchaseItems?.reduce((sum, item) => sum + Number(item.total_cost), 0) || 0;
-
-      const uniquePurchases = new Set(purchaseItems?.map(item => item.purchase_id));
-      const totalCompras = uniquePurchases.size;
+      const gastoSemana = purchasesData?.reduce((sum, p) => sum + Number(p.valor_total), 0) || 0;
+      const totalCompras = purchasesData?.length || 0;
 
       setKpis({ gastoSemana, totalCompras });
 
@@ -72,23 +63,21 @@ export function Dashboard() {
       const { data: billsData } = await supabase
         .from('bills')
         .select('*')
-        .eq('user_id', user?.id)
-        .eq('status', 'scheduled')
-        .gte('due_date', hoje.toISOString().split('T')[0])
-        .lte('due_date', proximos7Dias.toISOString().split('T')[0])
-        .order('due_date', { ascending: true })
+        .eq('status', 'pending')
+        .gte('vencimento', hoje.toISOString().split('T')[0])
+        .lte('vencimento', proximos7Dias.toISOString().split('T')[0])
+        .order('vencimento', { ascending: true })
         .limit(5);
 
       setBills(billsData || []);
 
-      const { data: purchasesData } = await supabase
+      const { data: recentPurchases } = await supabase
         .from('purchases')
         .select('*')
-        .eq('user_id', user?.id)
-        .order('date', { ascending: false })
+        .order('data', { ascending: false })
         .limit(5);
 
-      setPurchases(purchasesData || []);
+      setPurchases(recentPurchases || []);
 
       const oitoSemanasAtras = new Date();
       oitoSemanasAtras.setDate(hoje.getDate() - 56);
@@ -96,45 +85,39 @@ export function Dashboard() {
       const [purchasesWeekly, billsWeekly] = await Promise.all([
         supabase
           .from('purchases')
-          .select('date, total_amount')
-          .eq('user_id', user?.id)
-          .gte('date', oitoSemanasAtras.toISOString().split('T')[0]),
+          .select('data, valor_total')
+          .gte('data', oitoSemanasAtras.toISOString().split('T')[0]),
 
         supabase
           .from('bills')
-          .select('due_date, amount')
-          .eq('user_id', user?.id)
-          .gte('due_date', oitoSemanasAtras.toISOString().split('T')[0])
+          .select('vencimento, valor')
+          .gte('vencimento', oitoSemanasAtras.toISOString().split('T')[0])
       ]);
 
       const weeklyMap: { [key: string]: { compras: number; boletos: number } } = {};
 
       purchasesWeekly.data?.forEach((purchase) => {
-        const date = new Date(purchase.date + 'T00:00:00');
+        const date = new Date(purchase.data + 'T00:00:00');
         const weekStart = new Date(date);
-        const dayOfWeek = weekStart.getDay();
-        const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-        weekStart.setDate(weekStart.getDate() + diff);
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
         const weekKey = weekStart.toISOString().split('T')[0];
 
         if (!weeklyMap[weekKey]) {
           weeklyMap[weekKey] = { compras: 0, boletos: 0 };
         }
-        weeklyMap[weekKey].compras += Number(purchase.total_amount) || 0;
+        weeklyMap[weekKey].compras += Number(purchase.valor_total) || 0;
       });
 
       billsWeekly.data?.forEach((bill) => {
-        const date = new Date(bill.due_date + 'T00:00:00');
+        const date = new Date(bill.vencimento + 'T00:00:00');
         const weekStart = new Date(date);
-        const dayOfWeek = weekStart.getDay();
-        const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-        weekStart.setDate(weekStart.getDate() + diff);
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
         const weekKey = weekStart.toISOString().split('T')[0];
 
         if (!weeklyMap[weekKey]) {
           weeklyMap[weekKey] = { compras: 0, boletos: 0 };
         }
-        weeklyMap[weekKey].boletos += Number(bill.amount) || 0;
+        weeklyMap[weekKey].boletos += Number(bill.valor) || 0;
       });
 
       const weeklyArray = Object.entries(weeklyMap)
@@ -209,13 +192,13 @@ export function Dashboard() {
               {bills.map((bill) => (
                 <div key={bill.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
-                    <p className="font-medium text-gray-800">{bill.issuer_name}</p>
+                    <p className="font-medium text-gray-800">{bill.emissor}</p>
                     <p className="text-sm text-gray-600">
-                      {new Date(bill.due_date).toLocaleDateString('pt-BR')}
+                      {new Date(bill.vencimento).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-gray-800">R$ {Number(bill.amount).toFixed(2)}</p>
+                    <p className="font-semibold text-gray-800">R$ {Number(bill.valor).toFixed(2)}</p>
                     <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded">
                       {bill.status}
                     </span>
@@ -239,13 +222,13 @@ export function Dashboard() {
               {purchases.map((purchase) => (
                 <div key={purchase.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
-                    <p className="font-medium text-gray-800">{purchase.supplier_name_raw}</p>
+                    <p className="font-medium text-gray-800">{purchase.fornecedor}</p>
                     <p className="text-sm text-gray-600">
-                      {new Date(purchase.date).toLocaleDateString('pt-BR')}
+                      {new Date(purchase.data).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-600">{purchase.invoice_number || 'S/N'}</p>
+                    <p className="text-sm text-gray-600">{purchase.numero_nota || 'S/N'}</p>
                     <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">
                       {purchase.status}
                     </span>

@@ -1,193 +1,168 @@
-# Restaurant Purchase Tracker - Infrastructure
+# Controle Restaurante
 
-Este projeto contém a infraestrutura como código (IaC) para o aplicativo Restaurant Purchase Tracker usando Terraform e Google Cloud Platform.
+Sistema simplificado de controle financeiro para restaurantes, com upload e processamento automático de cupons fiscais e boletos usando IA.
 
-## Arquivos do Projeto
+## Características
 
-- **Dockerfile**: Configuração para containerização da aplicação Java
-- **main.tf**: Configuração principal do Terraform com todos os recursos GCP
-- **variables.tf**: Definição das variáveis do Terraform
-- **terraform.tfvars.example**: Exemplo de arquivo de configuração (copie para terraform.tfvars)
+- ✅ **Sem autenticação** - Acesso direto, ideal para uso privado
+- ✅ **OCR com IA** - Extração automática de dados de cupons fiscais usando Claude 3.5 Sonnet
+- ✅ **Confirmação manual** - Revise e corrija dados antes de salvar
+- ✅ **Chat inteligente** - Aprendizado automático de produtos similares
+- ✅ **Dashboard** - Visualização de gastos e compras
+- ✅ **Gestão de boletos** - Controle de contas a pagar
+- ✅ **100% em Português** - Interface totalmente em português
 
-## Recursos Provisionados
+## Tecnologias
 
-Este Terraform provisiona:
+- **Frontend**: React + TypeScript + Vite + Tailwind CSS
+- **Backend**: Supabase (PostgreSQL)
+- **IA**: Claude 3.5 Sonnet (Anthropic)
+- **Storage**: Supabase Storage
+- **Hospedagem**: Vercel
 
-### Infraestrutura de Rede
-- VPC Network privada
-- VPC Access Connector para Cloud Run
-- Peering de rede privada para Cloud SQL
+## Configuração
 
-### Banco de Dados
-- Cloud SQL PostgreSQL 15
-- Banco de dados `financeiro_db`
-- Usuário `financeiro_user` com senha gerada automaticamente
-- Configuração de rede privada (sem IP público)
+### 1. Clone o projeto
 
-### Segurança
-- Secret Manager para armazenar senha do banco
-- Service Account dedicada para Cloud Run
-- Permissões IAM mínimas necessárias
-
-### Aplicação
-- Cloud Run service para hospedar a aplicação
-- Configuração de variáveis de ambiente
-- Auto-scaling (0-5 instâncias)
-
-## Instruções de Uso
-
-### 1. Pré-requisitos
-
-- [Terraform](https://www.terraform.io/downloads.html) instalado
-- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) instalado
-- Projeto GCP criado
-- Autenticação configurada:
-  ```bash
-  gcloud auth login
-  gcloud config set project YOUR_PROJECT_ID
-  gcloud auth application-default login
-  ```
-
-### 2. Configuração
-
-1. **Clone ou baixe os arquivos** para um diretório local
-
-2. **Configure as variáveis**:
-   ```bash
-   cp terraform.tfvars.example terraform.tfvars
-   ```
-   
-   Edite `terraform.tfvars` com seus valores:
-   ```hcl
-   project_id = "seu-project-id-gcp"
-   region     = "southamerica-east1"  # ou sua região preferida
-   ```
-
-3. **Inicialize o Terraform**:
-   ```bash
-   terraform init
-   ```
-
-### 3. Deploy da Infraestrutura
-
-1. **Planeje a execução**:
-   ```bash
-   terraform plan
-   ```
-   
-2. **Aplique as mudanças**:
-   ```bash
-   terraform apply
-   ```
-   
-   Digite `yes` quando solicitado.
-
-### 4. Outputs Importantes
-
-Após o deploy, o Terraform exibirá:
-- **cloud_run_url**: URL do serviço Cloud Run
-- **db_user**: Nome do usuário do banco
-- **db_name**: Nome do banco de dados
-- **db_password_secret_id**: ID do secret com a senha
-
-### 5. Próximos Passos
-
-Após a infraestrutura estar pronta:
-
-1. **Build da imagem Docker**:
-   ```bash
-   # Configure o Docker para usar o GCR
-   gcloud auth configure-docker
-   
-   # Build e push da imagem
-   docker build -t gcr.io/YOUR_PROJECT_ID/finance-app:latest .
-   docker push gcr.io/YOUR_PROJECT_ID/finance-app:latest
-   ```
-
-2. **Deploy da aplicação**:
-   ```bash
-   # Atualizar o Cloud Run com a nova imagem
-   gcloud run deploy controle-financeiro-api \
-     --image gcr.io/YOUR_PROJECT_ID/finance-app:latest \
-     --region YOUR_REGION
-   ```
-
-## Estrutura de Custos
-
-- **Cloud SQL**: db-f1-micro (tier econômico)
-- **Cloud Run**: Pay-per-use, escala para zero
-- **VPC**: Sem custos adicionais
-- **Secret Manager**: Primeiros 6 secrets gratuitos
-
-## Segurança
-
-- ✅ Cloud SQL sem IP público
-- ✅ Comunicação via rede privada
-- ✅ Senhas geradas automaticamente
-- ✅ Secrets gerenciados pelo Secret Manager
-- ✅ Permissões IAM mínimas
-
-## CI/CD Pipeline
-
-O projeto inclui configuração completa de CI/CD com Cloud Build:
-
-### Arquivo cloudbuild.yaml
-
-O pipeline automatiza:
-1. **Build Maven**: Compilação e empacotamento da aplicação Java
-2. **Build Docker**: Criação da imagem Docker usando o Dockerfile multi-estágio
-3. **Deploy Cloud Run**: Deploy automático da nova versão
-
-### Configuração do Pipeline
-
-1. **Habilitar APIs necessárias**:
-   ```bash
-   gcloud services enable cloudbuild.googleapis.com artifactregistry.googleapis.com
-   ```
-
-2. **Criar repositório Artifact Registry** (opcional):
-   ```bash
-   gcloud artifacts repositories create finance-app \
-     --repository-format=docker \
-     --location=southamerica-east1 \
-     --description="Docker repository for finance-app"
-   ```
-
-3. **Configurar Cloud Build Trigger**:
-   - Acesse Cloud Build > Triggers no console GCP
-   - Conecte seu repositório GitHub
-   - Configure trigger para branch `main`
-   - Defina `_REGION` nas variáveis de substituição
-   - Aponte para `/cloudbuild.yaml`
-
-### Deploy Automático
-
-Após configurar o trigger:
-- ✅ Push para `main` → Build automático
-- ✅ Testes e compilação Maven
-- ✅ Build da imagem Docker
-- ✅ Deploy no Cloud Run
-- ✅ Versionamento com SHA do commit
-
-## Limpeza
-
-Para remover todos os recursos:
 ```bash
-terraform destroy
+git clone <seu-repositorio>
+cd controle-restaurante
 ```
 
-⚠️ **Atenção**: Isso removerá permanentemente todos os dados!
+### 2. Instale as dependências
 
-## Troubleshooting
+```bash
+npm install
+```
 
-### Erro de APIs não habilitadas
-Se você receber erros sobre APIs não habilitadas, aguarde alguns minutos após o `terraform apply` e execute novamente.
+### 3. Configure as variáveis de ambiente
 
-### Erro de permissões
-Verifique se sua conta tem as permissões necessárias:
-- Editor ou Owner no projeto
-- Service Account Admin
-- Cloud SQL Admin
+Crie um arquivo `.env` na raiz do projeto:
 
-### Problemas de conectividade
-Verifique se o VPC Access Connector foi criado corretamente e se o Cloud Run está configurado para usá-lo.
+```env
+VITE_SUPABASE_URL=https://ixyxegpijupehxykntck.supabase.co
+VITE_SUPABASE_ANON_KEY=sua-chave-aqui
+```
+
+### 4. Execute localmente
+
+```bash
+npm run dev
+```
+
+Acesse `http://localhost:5173`
+
+## Deploy no Vercel
+
+### Opção 1: Via GitHub (Recomendado)
+
+1. Faça push do código para o GitHub
+2. Acesse [vercel.com](https://vercel.com)
+3. Clique em "Add New Project"
+4. Importe seu repositório
+5. Configure as variáveis de ambiente:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+6. Clique em "Deploy"
+
+### Opção 2: Via CLI
+
+```bash
+# Instale o Vercel CLI
+npm i -g vercel
+
+# Faça login
+vercel login
+
+# Deploy
+vercel --prod
+```
+
+## Configuração do Supabase
+
+O banco de dados já está configurado no projeto `ixyxegpijupehxykntck.supabase.co`.
+
+As migrações já foram aplicadas e incluem:
+
+- Tabela `products` - Catálogo de produtos
+- Tabela `purchases` - Compras registradas
+- Tabela `purchase_items` - Itens das compras
+- Tabela `bills` - Boletos a pagar
+- Tabela `product_learning` - Aprendizado de produtos
+- Edge Function `processar-cupom-simples` - Processa cupons fiscais com IA
+- Storage bucket `documents` - Armazena imagens dos cupons
+
+## Como Usar
+
+### 1. Escanear Cupom Fiscal
+
+1. Clique em "Escanear" no menu
+2. Selecione "Cupom Fiscal"
+3. Faça upload da foto do cupom
+4. Aguarde o processamento pela IA
+5. Revise os dados extraídos
+6. Corrija se necessário
+7. Confirme para salvar
+
+### 2. Chat de Aprendizado
+
+O chat aparece automaticamente quando há produtos para categorizar:
+
+1. Clique no ícone de chat no canto inferior direito
+2. Responda às perguntas do assistente
+3. Categorize novos produtos
+4. O sistema aprende e associa automaticamente da próxima vez
+
+### 3. Visualizar Dashboard
+
+- Gastos da semana e do mês
+- Compras recentes
+- Boletos pendentes
+- Gráficos semanais
+
+### 4. Gerenciar Boletos
+
+1. Clique em "Boletos" no menu
+2. Veja boletos pendentes e pagos
+3. Marque como pago quando necessário
+
+## Estrutura do Projeto
+
+```
+src/
+├── components/          # Componentes React
+│   ├── ChatAprendizado.tsx
+│   └── ConfirmacaoDados.tsx
+├── pages/              # Páginas da aplicação
+│   ├── Dashboard.tsx
+│   ├── UploadSimples.tsx
+│   ├── Historico.tsx
+│   └── Boletos.tsx
+├── lib/                # Configurações
+│   └── supabase.ts
+└── App.tsx             # Componente principal
+
+supabase/
+├── migrations/         # Migrações do banco
+└── functions/          # Edge Functions
+    └── processar-cupom-simples/
+```
+
+## Observações Importantes
+
+- **Uso Privado**: Este app não tem autenticação, ideal para uso pessoal
+- **Chave da API exposta**: OK para apps privados, a ANON_KEY é segura para frontend
+- **IA Claude 3.5 Sonnet**: Melhor precisão para OCR de cupons brasileiros
+- **Sem modo offline**: Requer conexão com internet
+- **Português**: Interface 100% em português do Brasil
+
+## Suporte
+
+Para problemas ou dúvidas:
+1. Verifique se as variáveis de ambiente estão corretas
+2. Confirme que o projeto Supabase está ativo
+3. Verifique se a ANTHROPIC_API_KEY está configurada no Supabase
+
+## Licença
+
+Uso privado - Restaurante pessoal
