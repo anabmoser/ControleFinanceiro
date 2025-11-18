@@ -1,0 +1,107 @@
+{
+  "app": {
+    "title": "Control Financiero",
+    "subtitle": "Gestiona tus finanzas con inteligencia"
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "upload": "Subir",
+    "chat": "Chat BI",
+    "history": "Historial",
+    "reports": "Informes",
+    "admin": "Admin",
+    "logout": "Salir"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "weekSpending": "Gasto de la Semana",
+    "weekPurchases": "Compras de la Semana",
+    "upcomingBills": "Facturas Próximas (7 días)",
+    "recentPurchases": "Compras Recientes",
+    "noBills": "Sin facturas programadas",
+    "noPurchases": "Sin compras registradas",
+    "purchasesByWeek": "Total de Compras por Semana",
+    "billsByWeek": "Total de Facturas por Semana",
+    "loading": "Cargando..."
+  },
+  "upload": {
+    "title": "Subir Documentos",
+    "dragDrop": "Arrastra y suelta tu documento aquí",
+    "or": "o haz clic para seleccionar un archivo",
+    "formats": "Formatos aceptados: JPG, PNG, PDF (máx. 10MB)",
+    "documentType": "Tipo de documento:",
+    "receipt": "Recibo Fiscal",
+    "receiptDesc": "Nota de compra",
+    "bill": "Factura",
+    "billDesc": "Cuenta a pagar",
+    "process": "Procesar Documento",
+    "processing": "Procesando...",
+    "success": "¡Documento procesado con éxito!",
+    "error": "Error al procesar documento"
+  },
+  "history": {
+    "title": "Historial de Compras",
+    "subtitle": "Ver todas tus compras y detalles de productos",
+    "lastWeek": "Última Semana",
+    "lastMonth": "Último Mes",
+    "all": "Todas",
+    "noData": "No se encontraron compras",
+    "loadMore": "Cargar más",
+    "loading": "Cargando historial...",
+    "items": "artículos",
+    "item": "artículo"
+  },
+  "reports": {
+    "title": "Informes",
+    "export": "Exportar CSV",
+    "filters": "Filtros",
+    "reportType": "Tipo de Informe",
+    "products": "Productos",
+    "suppliers": "Proveedores",
+    "topProducts": "Top Productos",
+    "startDate": "Fecha Inicial",
+    "endDate": "Fecha Final",
+    "generate": "Generar Informe",
+    "generating": "Generando informe...",
+    "results": "Resultados",
+    "totalRecords": "Total de registros",
+    "totalValue": "Valor Total"
+  },
+  "chat": {
+    "title": "Chat BI",
+    "placeholder": "Escribe tu pregunta...",
+    "welcome": "¡Hola! Soy tu asistente de Business Intelligence.",
+    "examples": "Preguntas de ejemplo:",
+    "example1": "¿Cuánto gasté este mes?",
+    "example2": "¿Qué productos compré más?",
+    "example3": "Muestra mis gastos por proveedor"
+  },
+  "login": {
+    "title": "Inicia sesión en tu cuenta",
+    "subtitle": "Accede a tus finanzas",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "login": "Entrar",
+    "register": "Registrar",
+    "noAccount": "¿No tienes una cuenta?",
+    "hasAccount": "¿Ya tienes una cuenta?",
+    "createAccount": "Crear cuenta"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "markAllRead": "Marcar todas como leídas",
+    "noNotifications": "Sin notificaciones",
+    "billDue": "Factura venciendo"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito"
+  }
+}
