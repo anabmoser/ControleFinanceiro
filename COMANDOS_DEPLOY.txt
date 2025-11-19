@@ -1,0 +1,126 @@
+═══════════════════════════════════════════════════════════
+🚀 DEPLOY RÁPIDO - CONTROLE RESTAURANTE
+═══════════════════════════════════════════════════════════
+
+📍 LOCALIZAÇÃO DO PROJETO:
+   /tmp/cc-agent/59631402/project
+
+═══════════════════════════════════════════════════════════
+OPÇÃO 1: DEPLOY AUTOMÁTICO (MAIS FÁCIL)
+═══════════════════════════════════════════════════════════
+
+Copie e cole estes comandos no terminal:
+
+cd /tmp/cc-agent/59631402/project
+./deploy.sh
+
+Quando pedir as variáveis, use:
+
+VITE_SUPABASE_URL:
+https://ixyxegpijupehxykntck.supabase.co
+
+VITE_SUPABASE_ANON_KEY:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4eXhlZ3BpanVwZWh4eWtudGNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA2Njk1MzQsImV4cCI6MjA0NjI0NTUzNH0.8c3EfEYwD1yOHwhJ16OPfMlh95xJADZgfWgxb5zTHmQ
+
+═══════════════════════════════════════════════════════════
+OPÇÃO 2: DEPLOY MANUAL PASSO A PASSO
+═══════════════════════════════════════════════════════════
+
+1. Instalar Vercel CLI:
+   npm install -g vercel
+
+2. Navegar até o projeto:
+   cd /tmp/cc-agent/59631402/project
+
+3. Fazer login:
+   vercel login
+
+4. Deploy:
+   vercel --prod
+
+5. Adicionar variáveis:
+   vercel env add VITE_SUPABASE_URL
+   vercel env add VITE_SUPABASE_ANON_KEY
+
+6. Redeploy:
+   vercel --prod
+
+═══════════════════════════════════════════════════════════
+OPÇÃO 3: TESTAR LOCALMENTE PRIMEIRO
+═══════════════════════════════════════════════════════════
+
+cd /tmp/cc-agent/59631402/project
+npm install
+npm run dev
+
+Acesse: http://localhost:5173
+
+═══════════════════════════════════════════════════════════
+📦 ARQUIVOS IMPORTANTES
+═══════════════════════════════════════════════════════════
+
+✅ .env                    - Variáveis de ambiente
+✅ package.json            - Dependências
+✅ vercel.json             - Configuração Vercel
+✅ deploy.sh               - Script de deploy automático
+✅ DEPLOY_VERCEL.md        - Guia completo
+✅ README.md               - Documentação
+
+═══════════════════════════════════════════════════════════
+🗂️ ESTRUTURA DO PROJETO
+═══════════════════════════════════════════════════════════
+
+src/
+├── App.tsx                - App principal
+├── components/
+│   ├── ChatAprendizado.tsx
+│   └── ConfirmacaoDados.tsx
+├── pages/
+│   ├── Dashboard.tsx
+│   ├── UploadSimples.tsx
+│   ├── Historico.tsx
+│   └── Boletos.tsx
+└── lib/
+    └── supabase.ts
+
+═══════════════════════════════════════════════════════════
+✅ CHECKLIST PRÉ-DEPLOY
+═══════════════════════════════════════════════════════════
+
+[✓] Banco de dados Supabase criado
+[✓] Migrações aplicadas
+[✓] Edge Function deployada
+[✓] Storage bucket criado
+[✓] Build testado localmente
+[✓] Variáveis de ambiente configuradas
+[✓] README atualizado
+
+═══════════════════════════════════════════════════════════
+🎯 APÓS O DEPLOY
+═══════════════════════════════════════════════════════════
+
+1. Acesse a URL fornecida pelo Vercel
+2. Teste fazer upload de um cupom
+3. Confirme os dados extraídos
+4. Veja aparecer no Dashboard
+5. Interaja com o Chat para categorizar
+
+═══════════════════════════════════════════════════════════
+📞 TROUBLESHOOTING
+═══════════════════════════════════════════════════════════
+
+Erro no build?
+→ npm run build
+→ Verifique os logs
+
+App não carrega?
+→ Verifique variáveis de ambiente
+→ Teste: curl https://ixyxegpijupehxykntck.supabase.co
+
+IA não funciona?
+→ Verifique ANTHROPIC_API_KEY no Supabase
+→ Teste a Edge Function manualmente
+
+═══════════════════════════════════════════════════════════
+🚀 TUDO PRONTO! COMECE O DEPLOY AGORA!
+═══════════════════════════════════════════════════════════
