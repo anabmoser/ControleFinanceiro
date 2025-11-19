@@ -22,10 +22,10 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { fileUrl, userId } = await req.json();
+    const { fileUrl } = await req.json();
 
-    if (!fileUrl || !userId) {
-      throw new Error('fileUrl e userId são obrigatórios');
+    if (!fileUrl) {
+      throw new Error('fileUrl é obrigatório');
     }
 
     const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY') || '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';
@@ -122,55 +122,10 @@ REGRAS IMPORTANTES:
       throw new Error('Erro ao parsear resposta da IA');
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    console.log('Salvando boleto no banco...');
-
-    const { data: bill, error: billError } = await supabase
-      .from('bills')
-      .insert({
-        user_id: userId,
-        issuer_name: boletoData.issuer_name,
-        cnpj: boletoData.cnpj,
-        description: boletoData.description,
-        due_date: boletoData.due_date,
-        amount: boletoData.amount,
-        barcode: boletoData.barcode,
-        our_number: boletoData.our_number,
-        file_url: fileUrl,
-        status: 'scheduled',
-      })
-      .select()
-      .single();
-
-    if (billError) {
-      console.error('Erro ao salvar boleto:', billError);
-      throw billError;
-    }
-
-    console.log('Boleto salvo, ID:', bill.id);
-    console.log('Salvando recibo...');
-
-    await supabase.from('receipts').insert({
-      user_id: userId,
-      bill_id: bill.id,
-      source: 'upload',
-      file_type: 'image/jpeg',
-      url: fileUrl,
-      status: 'parsed',
-    });
-
     console.log('Processamento concluído com sucesso!');
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        billId: bill.id,
-        dueDate: boletoData.due_date,
-        amount: boletoData.amount,
-      }),
+      JSON.stringify(boletoData),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
