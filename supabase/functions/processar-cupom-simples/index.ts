@@ -28,9 +28,9 @@ Deno.serve(async (req: Request) => {
       throw new Error('fileUrl é obrigatório');
     }
 
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-    if (!geminiApiKey) {
-      throw new Error('GEMINI_API_KEY não configurada');
+    const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY') || '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';
+    if (!anthropicApiKey) {
+      throw new Error('ANTHROPIC_API_KEY não configurada');
     }
 
     console.log('Baixando imagem...');
@@ -68,59 +68,48 @@ REGRAS:
 - Se não conseguir identificar algo, use null
 - Retorne APENAS o JSON, sem texto adicional`;
 
-    console.log('Chamando Gemini API...');
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+    console.log('Chamando API do Claude...');
 
-    const geminiResponse = await fetch(geminiUrl, {
+    const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'x-api-key': anthropicApiKey,
+        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        contents: [
+        model: 'claude-3-haiku-20240307',
+        max_tokens: 2048,
+        messages: [
           {
-            parts: [
+            role: 'user',
+            content: [
               {
-                text: prompt,
-              },
-              {
-                inline_data: {
-                  mime_type: 'image/jpeg',
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: 'image/jpeg',
                   data: base64Image,
                 },
+              },
+              {
+                type: 'text',
+                text: prompt,
               },
             ],
           },
         ],
-        generationConfig: {
-          temperature: 0.1,
-          topK: 32,
-          topP: 1,
-          maxOutputTokens: 4096,
-        },
       }),
     });
 
-    if (!geminiResponse.ok) {
-      const errorData = await geminiResponse.text();
-      console.error('Erro da API Gemini:', errorData);
-      console.error('Status:', geminiResponse.status);
-
-      if (geminiResponse.status === 404) {
-        throw new Error('API Key inválida ou API não habilitada. Verifique sua chave em https://aistudio.google.com/apikey');
-      }
-
-      throw new Error(`Erro na IA: ${geminiResponse.status} - ${errorData}`);
+    if (!anthropicResponse.ok) {
+      const errorData = await anthropicResponse.text();
+      console.error('Erro da API Claude:', errorData);
+      throw new Error(`Erro ao chamar API do Claude: ${anthropicResponse.status}`);
     }
 
-    const geminiData = await geminiResponse.json();
-
-    if (!geminiData.candidates || !geminiData.candidates[0]?.content?.parts) {
-      console.error('Resposta inválida:', geminiData);
-      throw new Error('Resposta inválida da IA');
-    }
-
-    const extractedText = geminiData.candidates[0].content.parts[0].text;
+    const anthropicData = await anthropicResponse.json();
+    const extractedText = anthropicData.content[0].text;
 
     let cupomData;
     try {
