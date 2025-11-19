@@ -69,43 +69,48 @@ REGRAS:
 - Retorne APENAS o JSON, sem texto adicional`;
 
     console.log('Chamando Gemini API...');
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: prompt,
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+
+    const geminiResponse = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt,
+              },
+              {
+                inline_data: {
+                  mime_type: 'image/jpeg',
+                  data: base64Image,
                 },
-                {
-                  inline_data: {
-                    mime_type: 'image/jpeg',
-                    data: base64Image,
-                  },
-                },
-              ],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.1,
-            topK: 32,
-            topP: 1,
-            maxOutputTokens: 4096,
+              },
+            ],
           },
-        }),
-      }
-    );
+        ],
+        generationConfig: {
+          temperature: 0.1,
+          topK: 32,
+          topP: 1,
+          maxOutputTokens: 4096,
+        },
+      }),
+    });
 
     if (!geminiResponse.ok) {
       const errorData = await geminiResponse.text();
       console.error('Erro da API Gemini:', errorData);
-      throw new Error(`Erro na IA: ${geminiResponse.status}`);
+      console.error('Status:', geminiResponse.status);
+
+      if (geminiResponse.status === 404) {
+        throw new Error('API Key inválida ou API não habilitada. Verifique sua chave em https://aistudio.google.com/apikey');
+      }
+
+      throw new Error(`Erro na IA: ${geminiResponse.status} - ${errorData}`);
     }
 
     const geminiData = await geminiResponse.json();
