@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Servidor Funcionando</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status {
+            background: #10b981;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .info {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .info h2 {
+            color: #374151;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .info ul {
+            list-style: none;
+        }
+        .info li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+            color: #6b7280;
+        }
+        .info li:last-child {
+            border-bottom: none;
+        }
+        .button {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        .button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .check {
+            font-size: 40px;
+        }
+        .time {
+            color: #9ca3af;
+            font-size: 14px;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <span class="check">✅</span>
+            Servidor Online!
+        </h1>
+
+        <div class="status">
+            🚀 VITE RODANDO PERFEITAMENTE
+        </div>
+
+        <p style="margin: 20px 0; color: #374151; font-size: 16px;">
+            <strong>Se você está vendo esta página, significa que:</strong>
+        </p>
+
+        <div class="info">
+            <ul>
+                <li>✅ Servidor Vite está funcionando</li>
+                <li>✅ Porta 5173 está acessível</li>
+                <li>✅ Arquivos estáticos estão sendo servidos</li>
+                <li>✅ Navegador está conectando corretamente</li>
+            </ul>
+        </div>
+
+        <div class="info">
+            <h2>📋 Informações do Servidor</h2>
+            <ul>
+                <li><strong>Framework:</strong> React + TypeScript</li>
+                <li><strong>Build Tool:</strong> Vite 5.4.21</li>
+                <li><strong>Database:</strong> Supabase</li>
+                <li><strong>Port:</strong> 5173</li>
+            </ul>
+        </div>
+
+        <a href="/" class="button">
+            🏠 Ir para o App Principal →
+        </a>
+
+        <div class="time">
+            Página carregada em: <span id="time"></span>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('time').textContent = new Date().toLocaleTimeString('pt-BR');
+    </script>
+</body>
+</html>
