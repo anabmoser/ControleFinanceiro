@@ -28,9 +28,9 @@ Deno.serve(async (req: Request) => {
       throw new Error('fileUrl é obrigatório');
     }
 
-    const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY') || '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';
-    if (!anthropicApiKey) {
-      throw new Error('ANTHROPIC_API_KEY não configurada');
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      throw new Error('OPENAI_API_KEY não configurada');
     }
 
     console.log('Baixando imagem...');
@@ -68,48 +68,45 @@ REGRAS:
 - Se não conseguir identificar algo, use null
 - Retorne APENAS o JSON, sem texto adicional`;
 
-    console.log('Chamando API do Claude...');
+    console.log('Chamando API do OpenAI...');
 
-    const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
+    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': anthropicApiKey,
-        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${openaiApiKey}`,
       },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307',
-        max_tokens: 2048,
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'user',
             content: [
               {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: 'image/jpeg',
-                  data: base64Image,
-                },
-              },
-              {
                 type: 'text',
                 text: prompt,
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: `data:image/jpeg;base64,${base64Image}`,
+                },
               },
             ],
           },
         ],
+        max_tokens: 2048,
       }),
     });
 
-    if (!anthropicResponse.ok) {
-      const errorData = await anthropicResponse.text();
-      console.error('Erro da API Claude:', errorData);
-      throw new Error(`Erro ao chamar API do Claude: ${anthropicResponse.status}`);
+    if (!openaiResponse.ok) {
+      const errorData = await openaiResponse.text();
+      console.error('Erro da API OpenAI:', errorData);
+      throw new Error(`Erro ao chamar API do OpenAI: ${openaiResponse.status}`);
     }
 
-    const anthropicData = await anthropicResponse.json();
-    const extractedText = anthropicData.content[0].text;
+    const openaiData = await openaiResponse.json();
+    const extractedText = openaiData.choices[0].message.content;
 
     let cupomData;
     try {
