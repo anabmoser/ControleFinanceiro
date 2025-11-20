@@ -128,6 +128,21 @@ export default function ConsultaProdutos() {
       return;
     }
 
+    const buscaLower = busca.toLowerCase();
+
+    const filtroManual = todosOsProdutos.filter(p =>
+      p.nome.toLowerCase().includes(buscaLower) ||
+      p.categoria.toLowerCase().includes(buscaLower)
+    );
+
+    if (filtroManual.length > 0) {
+      setProdutos(filtroManual);
+      if (filtroManual.length === 1) {
+        setProdutoSelecionado(filtroManual[0]);
+      }
+      return;
+    }
+
     try {
       setBuscandoIA(true);
 
@@ -142,12 +157,13 @@ export default function ConsultaProdutos() {
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao buscar produtos');
+        setProdutos([]);
+        return;
       }
 
       const { produto_ids } = await response.json();
 
-      if (produto_ids.length > 0) {
+      if (produto_ids && produto_ids.length > 0) {
         const produtosFiltrados = todosOsProdutos.filter(p => produto_ids.includes(p.id));
         setProdutos(produtosFiltrados);
 
@@ -155,19 +171,11 @@ export default function ConsultaProdutos() {
           setProdutoSelecionado(produtosFiltrados[0]);
         }
       } else {
-        const filtroManual = todosOsProdutos.filter(p =>
-          p.nome.toLowerCase().includes(busca.toLowerCase()) ||
-          p.categoria.toLowerCase().includes(busca.toLowerCase())
-        );
-        setProdutos(filtroManual);
+        setProdutos([]);
       }
     } catch (error) {
       console.error('Erro na busca inteligente:', error);
-      const filtroManual = todosOsProdutos.filter(p =>
-        p.nome.toLowerCase().includes(busca.toLowerCase()) ||
-        p.categoria.toLowerCase().includes(busca.toLowerCase())
-      );
-      setProdutos(filtroManual);
+      setProdutos([]);
     } finally {
       setBuscandoIA(false);
     }
