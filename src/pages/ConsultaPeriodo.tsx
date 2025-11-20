@@ -71,33 +71,61 @@ export default function ConsultaPeriodo() {
     try {
       setLoading(true);
 
-      const { data, error } = await supabase
+      const { data: comprasData, error: comprasError } = await supabase
+        .from('purchases')
+        .select('id, data, fornecedor')
+        .eq('status', 'confirmed')
+        .gte('data', dataInicio)
+        .lte('data', dataFim);
+
+      if (comprasError) throw comprasError;
+
+      if (!comprasData || comprasData.length === 0) {
+        setItens([]);
+        setResumo({ total_gasto: 0, total_compras: 0, total_itens: 0 });
+        return;
+      }
+
+      const purchaseIds = comprasData.map(c => c.id);
+
+      const { data: itensData, error: itensError } = await supabase
         .from('purchase_items')
-        .select(`
-          quantidade,
-          unidade,
-          preco_unitario,
-          preco_total,
-          products!inner(nome, categoria),
-          purchases!inner(data, fornecedor, status)
-        `)
-        .eq('purchases.status', 'confirmed')
-        .gte('purchases.data', dataInicio)
-        .lte('purchases.data', dataFim)
-        .order('purchases(data)', { ascending: false });
+        .select('purchase_id, product_id, quantidade, unidade, preco_unitario, preco_total')
+        .in('purchase_id', purchaseIds);
 
-      if (error) throw error;
+      if (itensError) throw itensError;
 
-      let itensProcessados = data.map((item: any) => ({
-        produto: item.products.nome,
-        categoria: item.products.categoria || 'Sem categoria',
-        fornecedor: item.purchases.fornecedor,
-        data: item.purchases.data,
-        quantidade: parseFloat(item.quantidade),
-        unidade: item.unidade,
-        preco_unitario: parseFloat(item.preco_unitario),
-        preco_total: parseFloat(item.preco_total)
-      }));
+      const productIds = [...new Set(itensData.map(i => i.product_id))];
+
+      const { data: produtosData, error: produtosError } = await supabase
+        .from('products')
+        .select('id, nome, categoria')
+        .in('id', productIds);
+
+      if (produtosError) throw produtosError;
+
+      const produtosMap = new Map(produtosData.map(p => [p.id, p]));
+      const comprasMap = new Map(comprasData.map(c => [c.id, c]));
+
+      let itensProcessados = itensData
+        .map((item: any) => {
+          const produto = produtosMap.get(item.product_id);
+          const compra = comprasMap.get(item.purchase_id);
+
+          if (!produto || !compra) return null;
+
+          return {
+            produto: produto.nome,
+            categoria: produto.categoria || 'Sem categoria',
+            fornecedor: compra.fornecedor,
+            data: compra.data,
+            quantidade: parseFloat(item.quantidade),
+            unidade: item.unidade,
+            preco_unitario: parseFloat(item.preco_unitario),
+            preco_total: parseFloat(item.preco_total)
+          };
+        })
+        .filter(item => item !== null);
 
       if (fornecedorFiltro) {
         itensProcessados = itensProcessados.filter(i => i.fornecedor === fornecedorFiltro);
@@ -107,14 +135,15 @@ export default function ConsultaPeriodo() {
         itensProcessados = itensProcessados.filter(i => i.categoria === categoriaFiltro);
       }
 
+      itensProcessados.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+
       setItens(itensProcessados);
 
-      const comprasUnicas = [...new Set(data.map((item: any) => item.purchases.data))];
       const totalGasto = itensProcessados.reduce((sum, item) => sum + item.preco_total, 0);
 
       setResumo({
         total_gasto: totalGasto,
-        total_compras: comprasUnicas.length,
+        total_compras: comprasData.length,
         total_itens: itensProcessados.length
       });
     } catch (error) {

@@ -23,9 +23,11 @@ interface ProdutoHistorico {
 
 export default function ConsultaProdutos() {
   const [produtos, setProdutos] = useState<ProdutoHistorico[]>([]);
+  const [todosOsProdutos, setTodosOsProdutos] = useState<ProdutoHistorico[]>([]);
   const [busca, setBusca] = useState('');
   const [produtoSelecionado, setProdutoSelecionado] = useState<ProdutoHistorico | null>(null);
   const [loading, setLoading] = useState(true);
+  const [buscandoIA, setBuscandoIA] = useState(false);
 
   useEffect(() => {
     carregarProdutos();
@@ -43,29 +45,56 @@ export default function ConsultaProdutos() {
 
       const produtosComHistorico = await Promise.all(
         produtos.map(async (produto) => {
-          const { data: itens, error: itensError } = await supabase
+          const { data: itensData, error: itensError } = await supabase
             .from('purchase_items')
-            .select(`
-              quantidade,
-              unidade,
-              preco_unitario,
-              preco_total,
-              purchases!inner(data, fornecedor, status)
-            `)
-            .eq('product_id', produto.id)
-            .eq('purchases.status', 'confirmed')
-            .order('purchases(data)', { ascending: false });
+            .select('purchase_id, quantidade, unidade, preco_unitario, preco_total')
+            .eq('product_id', produto.id);
 
           if (itensError) throw itensError;
 
-          const compras = itens.map((item: any) => ({
-            data: item.purchases.data,
-            fornecedor: item.purchases.fornecedor,
-            quantidade: parseFloat(item.quantidade),
-            unidade: item.unidade,
-            preco_unitario: parseFloat(item.preco_unitario),
-            preco_total: parseFloat(item.preco_total)
-          }));
+          if (!itensData || itensData.length === 0) {
+            return {
+              id: produto.id,
+              nome: produto.nome,
+              categoria: produto.categoria || 'Sem categoria',
+              compras: [],
+              preco_medio: 0,
+              preco_minimo: 0,
+              preco_maximo: 0,
+              total_compras: 0,
+              quantidade_total: 0
+            };
+          }
+
+          const purchaseIds = [...new Set(itensData.map(i => i.purchase_id))];
+
+          const { data: comprasData, error: comprasError } = await supabase
+            .from('purchases')
+            .select('id, data, fornecedor')
+            .eq('status', 'confirmed')
+            .in('id', purchaseIds)
+            .order('data', { ascending: false });
+
+          if (comprasError) throw comprasError;
+
+          const comprasMap = new Map(comprasData.map(c => [c.id, c]));
+
+          const compras = itensData
+            .map((item: any) => {
+              const compra = comprasMap.get(item.purchase_id);
+              if (!compra) return null;
+
+              return {
+                data: compra.data,
+                fornecedor: compra.fornecedor,
+                quantidade: parseFloat(item.quantidade),
+                unidade: item.unidade,
+                preco_unitario: parseFloat(item.preco_unitario),
+                preco_total: parseFloat(item.preco_total)
+              };
+            })
+            .filter(c => c !== null)
+            .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 
           const precos = compras.map(c => c.preco_unitario);
           const quantidades = compras.reduce((sum, c) => sum + c.quantidade, 0);
@@ -84,7 +113,9 @@ export default function ConsultaProdutos() {
         })
       );
 
-      setProdutos(produtosComHistorico.filter(p => p.total_compras > 0));
+      const produtosComCompras = produtosComHistorico.filter(p => p.total_compras > 0);
+      setProdutos(produtosComCompras);
+      setTodosOsProdutos(produtosComCompras);
     } catch (error) {
       console.error('Erro ao carregar produtos:', error);
     } finally {
@@ -92,10 +123,68 @@ export default function ConsultaProdutos() {
     }
   };
 
-  const produtosFiltrados = produtos.filter(p =>
-    p.nome.toLowerCase().includes(busca.toLowerCase()) ||
-    p.categoria.toLowerCase().includes(busca.toLowerCase())
-  );
+  const buscarComIA = async () => {
+    if (!busca.trim()) {
+      setProdutos(todosOsProdutos);
+      return;
+    }
+
+    try {
+      setBuscandoIA(true);
+
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/busca-produto-inteligente`;
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ busca }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao buscar produtos');
+      }
+
+      const { produto_ids } = await response.json();
+
+      if (produto_ids.length > 0) {
+        const produtosFiltrados = todosOsProdutos.filter(p => produto_ids.includes(p.id));
+        setProdutos(produtosFiltrados);
+
+        if (produtosFiltrados.length === 1) {
+          setProdutoSelecionado(produtosFiltrados[0]);
+        }
+      } else {
+        const filtroManual = todosOsProdutos.filter(p =>
+          p.nome.toLowerCase().includes(busca.toLowerCase()) ||
+          p.categoria.toLowerCase().includes(busca.toLowerCase())
+        );
+        setProdutos(filtroManual);
+      }
+    } catch (error) {
+      console.error('Erro na busca inteligente:', error);
+      const filtroManual = todosOsProdutos.filter(p =>
+        p.nome.toLowerCase().includes(busca.toLowerCase()) ||
+        p.categoria.toLowerCase().includes(busca.toLowerCase())
+      );
+      setProdutos(filtroManual);
+    } finally {
+      setBuscandoIA(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (busca.trim()) {
+        buscarComIA();
+      } else {
+        setProdutos(todosOsProdutos);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [busca]);
 
   const formatarData = (data: string) => {
     return new Date(data).toLocaleDateString('pt-BR');
@@ -118,12 +207,20 @@ export default function ConsultaProdutos() {
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
             <input
               type="text"
-              placeholder="Buscar produto ou categoria..."
+              placeholder="Buscar produto (ex: 'qj parm', 'tomate', 'batata ing')..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               className="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
+            {buscandoIA && (
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+              </div>
+            )}
           </div>
+          <p className="text-xs text-slate-500 mt-2">
+            💡 Use busca inteligente: abreviações como "qj parm" encontram "Queijo Parmesão"
+          </p>
         </div>
 
         {loading ? (
@@ -136,11 +233,11 @@ export default function ConsultaProdutos() {
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 max-h-[calc(100vh-300px)] overflow-y-auto">
               <h2 className="text-xl font-semibold text-slate-800 mb-4 flex items-center gap-2">
                 <Package size={24} className="text-blue-600" />
-                Produtos ({produtosFiltrados.length})
+                Produtos ({produtos.length})
               </h2>
 
               <div className="space-y-3">
-                {produtosFiltrados.map((produto) => (
+                {produtos.map((produto) => (
                   <div
                     key={produto.id}
                     onClick={() => setProdutoSelecionado(produto)}
@@ -177,10 +274,11 @@ export default function ConsultaProdutos() {
                   </div>
                 ))}
 
-                {produtosFiltrados.length === 0 && (
+                {produtos.length === 0 && (
                   <div className="text-center py-8 text-slate-500">
                     <Package size={48} className="mx-auto mb-3 opacity-30" />
                     <p>Nenhum produto encontrado</p>
+                    {busca && <p className="text-xs mt-2">Tente outra busca ou verifique a ortografia</p>}
                   </div>
                 )}
               </div>
