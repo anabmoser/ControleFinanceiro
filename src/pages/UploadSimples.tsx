@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Upload, Loader, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ConfirmacaoDados } from '../components/ConfirmacaoDados';
+import VinculacaoProdutos from './VinculacaoProdutos';
 
 export function UploadSimples() {
   const [arquivo, setArquivo] = useState<File | null>(null);
@@ -42,7 +43,7 @@ export function UploadSimples() {
 
       setUrlImagem(publicUrl);
 
-      const endpoint = tipoDocumento === 'cupom' ? 'processar-cupom-simples' : 'processar-boleto';
+      const endpoint = tipoDocumento === 'cupom' ? 'processar-cupom-com-aprendizado' : 'processar-boleto';
       const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${endpoint}`;
 
       const response = await fetch(apiUrl, {
@@ -191,7 +192,16 @@ export function UploadSimples() {
         )}
       </div>
 
-      {dadosExtraidos && (
+      {dadosExtraidos && tipoDocumento === 'cupom' && dadosExtraidos.precisa_confirmacao && (
+        <VinculacaoProdutos
+          dadosCupom={dadosExtraidos}
+          urlImagem={urlImagem}
+          onConfirmar={handleConfirmarDados}
+          onCancelar={handleRejeitarDados}
+        />
+      )}
+
+      {dadosExtraidos && (tipoDocumento === 'boleto' || !dadosExtraidos.precisa_confirmacao) && (
         <ConfirmacaoDados
           dadosOCR={dadosExtraidos}
           urlImagem={urlImagem}
