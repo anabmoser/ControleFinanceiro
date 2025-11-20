@@ -113,9 +113,8 @@ export default function ConsultaProdutos() {
         })
       );
 
-      const produtosComCompras = produtosComHistorico.filter(p => p.total_compras > 0);
-      setProdutos(produtosComCompras);
-      setTodosOsProdutos(produtosComCompras);
+      setProdutos(produtosComHistorico);
+      setTodosOsProdutos(produtosComHistorico);
     } catch (error) {
       console.error('Erro ao carregar produtos:', error);
     } finally {
@@ -257,20 +256,24 @@ export default function ConsultaProdutos() {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 mt-3">
-                      <div className="text-center">
-                        <p className="text-xs text-slate-500">Preço Médio</p>
-                        <p className="text-sm font-semibold text-blue-600">{formatarMoeda(produto.preco_medio)}</p>
+                    {produto.total_compras > 0 ? (
+                      <div className="grid grid-cols-3 gap-2 mt-3">
+                        <div className="text-center">
+                          <p className="text-xs text-slate-500">Preço Médio</p>
+                          <p className="text-sm font-semibold text-blue-600">{formatarMoeda(produto.preco_medio)}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-slate-500">Mínimo</p>
+                          <p className="text-sm font-semibold text-green-600">{formatarMoeda(produto.preco_minimo)}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-slate-500">Máximo</p>
+                          <p className="text-sm font-semibold text-red-600">{formatarMoeda(produto.preco_maximo)}</p>
+                        </div>
                       </div>
-                      <div className="text-center">
-                        <p className="text-xs text-slate-500">Mínimo</p>
-                        <p className="text-sm font-semibold text-green-600">{formatarMoeda(produto.preco_minimo)}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs text-slate-500">Máximo</p>
-                        <p className="text-sm font-semibold text-red-600">{formatarMoeda(produto.preco_maximo)}</p>
-                      </div>
-                    </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 mt-2">Nenhuma compra registrada</p>
+                    )}
                   </div>
                 ))}
 
@@ -305,13 +308,15 @@ export default function ConsultaProdutos() {
                     </div>
                   </div>
 
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                    <Calendar size={20} className="text-blue-600" />
-                    Histórico de Compras
-                  </h3>
+                  {produtoSelecionado.total_compras > 0 ? (
+                    <>
+                      <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                        <Calendar size={20} className="text-blue-600" />
+                        Histórico de Compras
+                      </h3>
 
-                  <div className="space-y-3">
-                    {produtoSelecionado.compras.map((compra, idx) => {
+                      <div className="space-y-3">
+                        {produtoSelecionado.compras.map((compra, idx) => {
                       const variacaoPreco = idx < produtoSelecionado.compras.length - 1
                         ? compra.preco_unitario - produtoSelecionado.compras[idx + 1].preco_unitario
                         : 0;
@@ -347,8 +352,16 @@ export default function ConsultaProdutos() {
                           </div>
                         </div>
                       );
-                    })}
-                  </div>
+                        })}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8 text-slate-500">
+                      <Package size={48} className="mx-auto mb-3 opacity-30" />
+                      <p>Este produto ainda não possui compras registradas</p>
+                      <p className="text-xs mt-2">Faça upload de cupons fiscais que contenham este produto</p>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="flex items-center justify-center h-full text-slate-400">
